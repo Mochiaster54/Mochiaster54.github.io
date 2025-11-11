@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mochiaster54</title>
+    <title>Red Social Anónima - 4chan Style</title>
     <style>
         * {
             margin: 0;
@@ -157,17 +157,57 @@
         .admin-link:hover {
             background-color: #555;
         }
+
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .user-management {
+            background-color: #f0e0d6;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #d9bfb7;
+        }
+
+        .change-user-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .change-user-btn:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Mochiaster54</h1>
+            <h1>Red Social Anónima</h1>
             <div class="user-info">
                 Publicando como: <span id="usernameDisplay">Cargando...</span>
+                <button class="change-user-btn" onclick="changeUser()">Cambiar Usuario</button>
                 <a href="admin.html" class="admin-link">Panel Admin</a>
             </div>
         </header>
+
+        <div class="user-management">
+            <strong>Tu usuario actual:</strong> <span id="currentUserInfo"></span>
+            <br>
+            <small>Este usuario se guarda automáticamente en tu navegador</small>
+        </div>
         
         <div class="post-form">
             <h3>Crear Publicación</h3>
@@ -177,6 +217,11 @@
                 <small>Imagen opcional (máx. 5MB)</small>
             </div>
             <button id="postBtn">Publicar</button>
+        </div>
+
+        <div class="debug-info" id="debugInfo" style="display: none;">
+            <strong>Información de depuración:</strong>
+            <div id="debugContent"></div>
         </div>
         
         <div id="message" class="message" style="display: none;"></div>
@@ -188,45 +233,219 @@
 
     <script>
         // Configuración
-        const GITHUB_TOKEN = "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";
+        const GITHUB_TOKEN = "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";
         const POSTS_GIST_ID = "9dd304bfbb43c171e7a333dfdf5cc05b";
-        const BANNED_IPS_GIST_ID = "c1dbcc1b1e710a680d9969dcf7b56573";
+        const USERS_GIST_ID = "f91b70d12189a39f3f8ad2b0f8ec7f6c";
         
         // Nombres base para usuarios anónimos
         const BASE_NAMES = ["Demon", "Penguin", "Heli"];
         
-        // Generar nombre aleatorio basado en IP
-        function generateRandomName(ip) {
-            const baseName = BASE_NAMES[Math.floor(Math.random() * BASE_NAMES.length)];
-            const randomNum = Math.floor(Math.random() * 9999) + 1;
-            return `${baseName}${randomNum}`;
-        }
-        
-        // Simular obtención de IP (en un entorno real, esto vendría del servidor)
-        function getClientIP() {
-            // Esta es una simulación - en producción necesitarías un backend
-            return `user_${Math.random().toString(36).substr(2, 9)}`;
-        }
+        // Claves para localStorage
+        const USER_STORAGE_KEY = 'anon_user_data';
+        const POSTS_BACKUP_KEY = 'anon_posts_backup';
         
         // Elementos del DOM
         const postBtn = document.getElementById('postBtn');
         const messageDiv = document.getElementById('message');
         const usernameDisplay = document.getElementById('usernameDisplay');
+        const currentUserInfo = document.getElementById('currentUserInfo');
         const postsContainer = document.getElementById('postsContainer');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
         
         // Variables de estado
-        let clientIP = getClientIP();
-        let userName = generateRandomName(clientIP);
-        
-        // Inicializar usuario
-        usernameDisplay.textContent = userName;
-        
+        let clientIP = generateClientIP();
+        let userName = '';
+        let useLocalStorage = false;
+
+        // Generar IP única del cliente
+        function generateClientIP() {
+            // Crear una IP única basada en información del navegador
+            const userAgentHash = btoa(navigator.userAgent).substring(0, 10);
+            const timeHash = Date.now().toString(36);
+            return `user_${userAgentHash}_${timeHash}`;
+        }
+
+        // Generar nombre aleatorio
+        function generateRandomName() {
+            const baseName = BASE_NAMES[Math.floor(Math.random() * BASE_NAMES.length)];
+            const randomNum = Math.floor(Math.random() * 9999) + 1;
+            return `${baseName}${randomNum}`;
+        }
+
+        // Cargar o crear usuario
+        async function initializeUser() {
+            // Intentar cargar usuario existente desde localStorage
+            const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+            
+            if (savedUser) {
+                try {
+                    const userData = JSON.parse(savedUser);
+                    userName = userData.username;
+                    clientIP = userData.userIP;
+                    showDebugInfo(`✓ Usuario cargado: ${userName} (IP: ${clientIP})`);
+                    
+                    // Registrar usuario en el gist (por si acaso)
+                    await registerUserInGist(userName, clientIP);
+                } catch (error) {
+                    console.error('Error cargando usuario guardado:', error);
+                    createNewUser();
+                }
+            } else {
+                createNewUser();
+            }
+            
+            updateUserDisplay();
+        }
+
+        // Crear nuevo usuario
+        async function createNewUser() {
+            userName = generateRandomName();
+            clientIP = generateClientIP();
+            
+            const userData = {
+                username: userName,
+                userIP: clientIP,
+                createdAt: new Date().toISOString(),
+                lastSeen: new Date().toISOString()
+            };
+            
+            // Guardar en localStorage
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+            
+            // Registrar en el gist de usuarios
+            await registerUserInGist(userName, clientIP);
+            
+            showDebugInfo(`✓ Nuevo usuario creado: ${userName} (IP: ${clientIP})`);
+        }
+
+        // Cambiar de usuario
+        async function changeUser() {
+            if (confirm('¿Estás seguro de que quieres cambiar de usuario? Se generará uno nuevo.')) {
+                await createNewUser();
+                updateUserDisplay();
+                showMessage('Usuario cambiado exitosamente', 'success');
+            }
+        }
+
+        // Actualizar display del usuario
+        function updateUserDisplay() {
+            usernameDisplay.textContent = userName;
+            currentUserInfo.textContent = `${userName} (IP: ${clientIP.substring(0, 15)}...)`;
+        }
+
+        // Registrar usuario en el gist
+        async function registerUserInGist(username, userIP) {
+            try {
+                const userData = {
+                    username: username,
+                    userIP: userIP,
+                    createdAt: new Date().toISOString(),
+                    lastSeen: new Date().toISOString(),
+                    postCount: 0
+                };
+
+                // Cargar usuarios existentes
+                const existingUsers = await loadUsersFromGist();
+                
+                // Verificar si el usuario ya existe
+                const userExists = existingUsers.find(u => u.userIP === userIP);
+                
+                if (!userExists) {
+                    // Agregar nuevo usuario
+                    existingUsers.push(userData);
+                    
+                    // Guardar en el gist
+                    await saveUsersToGist(existingUsers);
+                    showDebugInfo(`✓ Usuario registrado en Gist: ${username}`);
+                } else {
+                    // Actualizar última vez visto
+                    const userIndex = existingUsers.findIndex(u => u.userIP === userIP);
+                    existingUsers[userIndex].lastSeen = new Date().toISOString();
+                    await saveUsersToGist(existingUsers);
+                    showDebugInfo(`✓ Usuario actualizado en Gist: ${username}`);
+                }
+                
+            } catch (error) {
+                console.error('Error registrando usuario en Gist:', error);
+                showDebugInfo(`⚠ Usuario guardado solo localmente: ${error.message}`);
+            }
+        }
+
+        // Cargar usuarios desde el gist
+        async function loadUsersFromGist() {
+            try {
+                const response = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    return [];
+                }
+                
+                const gist = await response.json();
+                const usersFile = gist.files['users.json'];
+                
+                if (usersFile) {
+                    const fileResponse = await fetch(usersFile.raw_url);
+                    if (fileResponse.ok) {
+                        const users = await fileResponse.json();
+                        return Array.isArray(users) ? users : [];
+                    }
+                }
+                
+                return [];
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+                return [];
+            }
+        }
+
+        // Guardar usuarios en el gist
+        async function saveUsersToGist(users) {
+            try {
+                const updateData = {
+                    description: `Usuarios registrados - ${users.length} usuarios - ${new Date().toLocaleString()}`,
+                    files: {
+                        "users.json": {
+                            content: JSON.stringify(users, null, 2)
+                        }
+                    }
+                };
+                
+                const response = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                return response.ok;
+            } catch (error) {
+                console.error('Error guardando usuarios:', error);
+                return false;
+            }
+        }
+
+        // Mostrar información de depuración
+        function showDebugInfo(info) {
+            debugContent.innerHTML = info;
+            debugInfo.style.display = 'block';
+        }
+
         // Función para cargar publicaciones desde el gist
         async function loadPosts() {
             try {
                 const response = await fetch(`https://api.github.com/gists/${POSTS_GIST_ID}`, {
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
                     }
                 });
                 
@@ -241,19 +460,39 @@
                     const fileResponse = await fetch(postsFile.raw_url);
                     if (fileResponse.ok) {
                         const posts = await fileResponse.json();
+                        useLocalStorage = false;
                         return Array.isArray(posts) ? posts : [];
                     }
                 }
                 
                 return [];
             } catch (error) {
-                console.error('Error al cargar publicaciones:', error);
+                // Fallback a localStorage
+                try {
+                    const localPosts = localStorage.getItem(POSTS_BACKUP_KEY);
+                    if (localPosts) {
+                        const posts = JSON.parse(localPosts);
+                        useLocalStorage = true;
+                        return posts;
+                    }
+                } catch (localError) {
+                    console.error('Error al cargar desde localStorage:', localError);
+                }
+                
                 return [];
             }
         }
-        
-        // Función para guardar publicaciones en el gist
+
+        // Función para guardar publicaciones
         async function savePosts(posts) {
+            // Guardar en localStorage como backup
+            try {
+                localStorage.setItem(POSTS_BACKUP_KEY, JSON.stringify(posts));
+            } catch (error) {
+                console.error('Error guardando en localStorage:', error);
+            }
+            
+            // Intentar guardar en GitHub
             try {
                 const updateData = {
                     description: `Publicaciones de la red social - ${posts.length} posts`,
@@ -268,18 +507,25 @@
                     method: 'PATCH',
                     headers: {
                         'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
                     },
                     body: JSON.stringify(updateData)
                 });
                 
-                return response.ok;
+                if (!response.ok) {
+                    throw new Error(`Error GitHub: ${response.status}`);
+                }
+                
+                useLocalStorage = false;
+                return true;
             } catch (error) {
-                console.error('Error al guardar publicaciones:', error);
-                return false;
+                console.error('Error al guardar en GitHub:', error);
+                useLocalStorage = true;
+                return true; // Éxito porque se guardó en localStorage
             }
         }
-        
+
         // Función para convertir imagen a base64
         function imageToBase64(file) {
             return new Promise((resolve, reject) => {
@@ -289,7 +535,7 @@
                 reader.readAsDataURL(file);
             });
         }
-        
+
         // Función para crear publicación
         postBtn.addEventListener('click', async function() {
             const content = document.getElementById('postContent').value.trim();
@@ -307,7 +553,6 @@
             
             let imageBase64 = null;
             
-            // Convertir imagen a base64 si existe
             if (imageFile) {
                 try {
                     imageBase64 = await imageToBase64(imageFile);
@@ -328,35 +573,33 @@
             };
             
             try {
-                // Cargar publicaciones existentes
                 const posts = await loadPosts();
-                
-                // Agregar nueva publicación al inicio
                 posts.unshift(newPost);
                 
-                // Guardar en el gist
+                if (posts.length > 1000) {
+                    posts.splice(1000);
+                }
+                
                 const saved = await savePosts(posts);
                 
                 if (saved) {
-                    // Limpiar formulario
                     document.getElementById('postContent').value = '';
                     document.getElementById('postImage').value = '';
                     
-                    // Mostrar mensaje de éxito
-                    showMessage('Publicación creada exitosamente', 'success');
+                    const storageType = useLocalStorage ? 'local' : 'GitHub';
+                    showMessage(`Publicación creada exitosamente (${storageType})`, 'success');
                     
-                    // Actualizar vista
                     await displayPosts();
                 } else {
                     showMessage('Error al guardar la publicación', 'error');
                 }
             } catch (error) {
                 console.error('Error al crear publicación:', error);
-                showMessage('Error al crear la publicación', 'error');
+                showMessage(`Error: ${error.message}`, 'error');
             }
         });
-        
-        // Función para cargar y mostrar publicaciones
+
+        // Función para mostrar publicaciones
         async function displayPosts() {
             try {
                 postsContainer.innerHTML = '<div class="loading">Cargando publicaciones...</div>';
@@ -402,7 +645,7 @@
                 postsContainer.innerHTML = '<div class="post error">Error al cargar las publicaciones</div>';
             }
         }
-        
+
         // Función para mostrar mensajes
         function showMessage(message, type) {
             messageDiv.textContent = message;
@@ -411,11 +654,12 @@
             
             setTimeout(() => {
                 messageDiv.style.display = 'none';
-            }, 3000);
+            }, 5000);
         }
-        
-        // Cargar publicaciones al iniciar
+
+        // Inicializar
         window.addEventListener('DOMContentLoaded', async function() {
+            await initializeUser();
             await displayPosts();
         });
     </script>
