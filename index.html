@@ -191,8 +191,8 @@
         </div>
     </div>
 
-    <script>
-        class ChanBoard {
+    <script>  
+    class ChanBoard {
     constructor() {
         this.githubToken = localStorage.getItem('githubToken');
         this.gistId = localStorage.getItem('gistId');
@@ -201,21 +201,32 @@
     }
 
     async init() {
-        if (!this.githubToken || !this.gistId) {
+        if (!this.githubToken) {
             this.showConfigForm();
-        } else {
+            return;
+        }
+
+        if (this.gistId) {
             await this.loadPosts();
             this.renderPosts();
+        } else {
+            this.showConfigForm();
         }
     }
 
     showConfigForm() {
         document.getElementById('githubConfig').style.display = 'block';
+        if (this.githubToken) {
+            document.getElementById('githubToken').value = this.githubToken;
+        }
+        if (this.gistId) {
+            document.getElementById('gistId').value = this.gistId;
+        }
     }
 
     async saveConfig() {
-        const token = document.getElementById('githubToken').value;
-        const gistId = document.getElementById('gistId').value;
+        const token = document.getElementById('githubToken').value.trim();
+        const gistId = document.getElementById('gistId').value.trim();
 
         if (!token) {
             this.showMessage('Por favor ingresa un token de GitHub', 'error');
@@ -223,81 +234,117 @@
         }
 
         this.githubToken = token;
-        this.gistId = gistId;
-
         localStorage.setItem('githubToken', token);
-        localStorage.setItem('gistId', gistId);
 
-        if (!gistId) {
-            await this.createGist();
-        } else {
+        if (gistId) {
+            this.gistId = gistId;
+            localStorage.setItem('gistId', gistId);
             await this.loadPosts();
+            document.getElementById('githubConfig').style.display = 'none';
+            this.showMessage('Configuración guardada correctamente', 'success');
+        } else {
+            await this.createGist();
         }
-
-        document.getElementById('githubConfig').style.display = 'none';
-        this.showMessage('Configuración guardada correctamente', 'success');
     }
 
     async createGist() {
         try {
+            this.showMessage('Creando nuevo Gist...', 'success');
+            
             const response = await fetch('https://api.github.com/gists', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `token ${this.githubToken}`,
+                    'Authorization': `Bearer ${this.githubToken}`,
                     'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.github.v3+json'
                 },
                 body: JSON.stringify({
                     description: 'ChanBoard - Publicaciones anónimas',
                     public: false,
                     files: {
                         'posts.json': {
-                            content: JSON.stringify([])
+                            content: JSON.stringify([], null, 2)
                         }
                     }
                 })
             });
 
-            if (!response.ok) throw new Error('Error creando Gist');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error creando Gist');
+            }
 
             const data = await response.json();
             this.gistId = data.id;
             localStorage.setItem('gistId', data.id);
             
+            document.getElementById('githubConfig').style.display = 'none';
+            this.showMessage('Gist creado correctamente', 'success');
+            
         } catch (error) {
+            console.error('Error creando Gist:', error);
             this.showMessage('Error al crear el Gist: ' + error.message, 'error');
         }
     }
 
     async loadPosts() {
         try {
-            if (!this.gistId) return;
+            if (!this.gistId) {
+                console.log('No hay Gist ID configurado');
+                return;
+            }
 
+            console.log('Cargando posts del Gist:', this.gistId);
+            
             const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
                 headers: {
-                    'Authorization': `token ${this.githubToken}`,
+                    'Authorization': `Bearer ${this.githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
                 }
             });
 
-            if (!response.ok) throw new Error('Error cargando posts');
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Gist no encontrado. Verifica el ID o crea uno nuevo.');
+                }
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
 
             const gist = await response.json();
+            console.log('Gist cargado:', gist);
+            
             const content = gist.files['posts.json'].content;
+            console.log('Contenido del archivo:', content);
+            
             this.posts = JSON.parse(content) || [];
+            console.log('Posts cargados:', this.posts);
             
         } catch (error) {
+            console.error('Error cargando posts:', error);
             this.showMessage('Error cargando posts: ' + error.message, 'error');
+            
+            // Si hay error, mostrar formulario de configuración
+            if (error.message.includes('no encontrado') || error.message.includes('404')) {
+                this.gistId = null;
+                localStorage.removeItem('gistId');
+                this.showConfigForm();
+            }
         }
     }
 
     async savePosts() {
         try {
+            console.log('Guardando posts...', this.posts);
+            
             const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `token ${this.githubToken}`,
+                    'Authorization': `Bearer ${this.githubToken}`,
                     'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.github.v3+json'
                 },
                 body: JSON.stringify({
+                    description: 'ChanBoard - Publicaciones anónimas',
                     files: {
                         'posts.json': {
                             content: JSON.stringify(this.posts, null, 2)
@@ -306,9 +353,16 @@
                 })
             });
 
-            if (!response.ok) throw new Error('Error guardando posts');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error guardando posts');
+            }
+
+            console.log('Posts guardados correctamente');
+            return true;
             
         } catch (error) {
+            console.error('Error guardando posts:', error);
             this.showMessage('Error guardando posts: ' + error.message, 'error');
             throw error;
         }
@@ -324,21 +378,34 @@
             return;
         }
 
+        // Validar que tenemos configuración
+        if (!this.githubToken || !this.gistId) {
+            this.showMessage('Primero configura tu token de GitHub', 'error');
+            this.showConfigForm();
+            return;
+        }
+
         let imageData = null;
         if (imageInput.files[0]) {
+            // Validar tamaño de imagen (máximo 1MB)
+            if (imageInput.files[0].size > 1024 * 1024) {
+                this.showMessage('La imagen no puede ser mayor a 1MB', 'error');
+                return;
+            }
             imageData = await this.convertImageToBase64(imageInput.files[0]);
         }
 
         const post = {
             id: Date.now().toString(),
-            title: title || 'Sin título',
+            title: title || '',
             content: content,
             image: imageData,
             timestamp: new Date().toISOString(),
             replies: []
         };
 
-        this.posts.unshift(post);
+        console.log('Creando nuevo post:', post);
+        this.posts.unshift(post); // Agregar al inicio del array
         
         try {
             await this.savePosts();
@@ -346,11 +413,18 @@
             this.clearForm();
             this.showMessage('Publicación creada correctamente', 'success');
         } catch (error) {
-            this.posts.shift(); // Revertir si hay error
+            // Revertir si hay error
+            this.posts.shift();
+            this.showMessage('Error al guardar la publicación', 'error');
         }
     }
 
     async addReply(threadId, content) {
+        if (!content.trim()) {
+            this.showMessage('La respuesta no puede estar vacía', 'error');
+            return;
+        }
+
         const reply = {
             id: Date.now().toString(),
             content: content,
@@ -364,8 +438,10 @@
             try {
                 await this.savePosts();
                 this.renderPosts();
+                this.showMessage('Respuesta agregada', 'success');
             } catch (error) {
-                thread.replies.pop(); // Revertir si hay error
+                thread.replies.pop();
+                this.showMessage('Error al guardar la respuesta', 'error');
             }
         }
     }
@@ -381,13 +457,29 @@
 
     renderPosts() {
         const threadsContainer = document.getElementById('threads');
-        threadsContainer.innerHTML = '';
-
-        if (this.posts.length === 0) {
-            threadsContainer.innerHTML = '<div class="post">No hay publicaciones aún. ¡Sé el primero en postear!</div>';
+        
+        if (!threadsContainer) {
+            console.error('No se encontró el contenedor de threads');
             return;
         }
 
+        threadsContainer.innerHTML = '';
+
+        if (this.posts.length === 0) {
+            threadsContainer.innerHTML = `
+                <div class="thread">
+                    <div class="post">
+                        <div class="post-content">
+                            No hay publicaciones aún. ¡Sé el primero en postear!
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        console.log('Renderizando', this.posts.length, 'posts');
+        
         this.posts.forEach(post => {
             const threadElement = this.createThreadElement(post);
             threadsContainer.appendChild(threadElement);
@@ -400,18 +492,20 @@
         threadDiv.innerHTML = `
             <div class="post">
                 <div class="post-header">
-                    Anónimo • ${new Date(post.timestamp).toLocaleString()}
-                    <span style="float: right;">#${post.id.slice(-4)}</span>
+                    <strong>Anónimo</strong> • ${new Date(post.timestamp).toLocaleString()}
+                    <span style="float: right; color: #789922;">#${post.id.slice(-6)}</span>
                 </div>
-                ${post.title ? `<div style="font-weight: bold; margin-bottom: 5px;">${this.escapeHtml(post.title)}</div>` : ''}
+                ${post.title ? `<div style="font-weight: bold; color: #0f0c5d; margin-bottom: 8px; font-size: 18px;">${this.escapeHtml(post.title)}</div>` : ''}
                 <div class="post-content">${this.formatContent(post.content)}</div>
-                ${post.image ? `<img src="${post.image}" class="post-image" alt="Imagen adjunta">` : ''}
+                ${post.image ? `<img src="${post.image}" class="post-image" alt="Imagen adjunta" style="max-width: 200px; max-height: 200px; margin-top: 10px; border: 1px solid #b7c5d9;">` : ''}
             </div>
-            <div class="replies" id="replies-${post.id}">
+            
+            <div class="replies">
                 ${post.replies.map(reply => this.createReplyElement(reply)).join('')}
             </div>
+            
             <div class="reply-form">
-                <textarea id="reply-${post.id}" placeholder="Responder a este hilo..." maxlength="1000"></textarea>
+                <textarea id="reply-${post.id}" placeholder="Responder a este hilo..." maxlength="1000" style="width: 100%; margin-bottom: 5px;"></textarea>
                 <button onclick="chanBoard.addReply('${post.id}', document.getElementById('reply-${post.id}').value)">Responder</button>
             </div>
         `;
@@ -420,9 +514,9 @@
 
     createReplyElement(reply) {
         return `
-            <div class="post">
+            <div class="post" style="margin-top: 10px; margin-left: 20px; border-left: 3px solid #789922; padding-left: 10px;">
                 <div class="post-header">
-                    Anónimo • ${new Date(reply.timestamp).toLocaleString()}
+                    <strong>Anónimo</strong> • ${new Date(reply.timestamp).toLocaleString()}
                 </div>
                 <div class="post-content">${this.formatContent(reply.content)}</div>
             </div>
@@ -430,9 +524,14 @@
     }
 
     formatContent(content) {
+        if (!content) return '';
+        
+        // Escapar HTML primero
+        let formatted = this.escapeHtml(content);
+        
         // Convertir URLs en enlaces
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        let formatted = this.escapeHtml(content).replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+        const urlRegex = /(https?:\/\/[^\s<]+)/g;
+        formatted = formatted.replace(urlRegex, '<a href="$1" target="_blank" style="color: #117743;">$1</a>');
         
         // Convertir saltos de línea en <br>
         formatted = formatted.replace(/\n/g, '<br>');
@@ -441,6 +540,7 @@
     }
 
     escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -454,10 +554,22 @@
 
     showMessage(message, type) {
         const messageDiv = document.getElementById('message');
+        if (!messageDiv) {
+            console.log(`[${type}] ${message}`);
+            return;
+        }
+        
         messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
         setTimeout(() => {
             messageDiv.innerHTML = '';
         }, 5000);
+    }
+
+    // Método para debug
+    debug() {
+        console.log('Token:', this.githubToken ? '✓ Configurado' : '✗ No configurado');
+        console.log('Gist ID:', this.gistId || '✗ No configurado');
+        console.log('Posts:', this.posts);
     }
 }
 
@@ -472,6 +584,9 @@ function saveConfig() {
 function createPost() {
     chanBoard.createPost();
 }
+
+// Debug en consola
+window.debugChanBoard = () => chanBoard.debug();
     </script>
 </body>
 </html>
