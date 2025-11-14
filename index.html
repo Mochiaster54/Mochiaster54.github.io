@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Red Social Anónima</title>
+    <title>ChanBoard - Anónimo</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
         }
         
         body {
-            background-color: #fffff0;
+            background-color: #eef2ff;
             color: #000;
             line-height: 1.4;
         }
@@ -21,580 +21,457 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 10px;
+            padding: 20px;
         }
         
         header {
-            background-color: #ff6600;
-            padding: 10px;
+            background-color: #800080;
+            color: white;
+            padding: 10px 0;
             margin-bottom: 20px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
         
         h1 {
-            color: white;
             font-size: 24px;
-        }
-        
-        .admin-link {
-            color: white;
-            text-decoration: none;
-            background-color: #333;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-        
-        .admin-link:hover {
-            background-color: #555;
-        }
-
-        /* Menú desplegable */
-        .menu-container {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-
-        .menu-button {
-            background-color: #ff6600;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .menu-button:hover {
-            background-color: #e55b00;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f9f9f9;
-            min-width: 400px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1000;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            top: 100%;
-            left: 0;
-            margin-top: 5px;
-        }
-
-        .dropdown-content.show {
-            display: block;
-        }
-
-        .post-form {
-            padding: 20px;
-            background-color: white;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
             font-weight: bold;
-            color: #333;
         }
-
-        .form-group input,
-        .form-group textarea {
+        
+        .post-form {
+            background-color: #d6daf0;
+            border: 1px solid #b7c5d9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        input, textarea {
             width: 100%;
             padding: 8px;
-            border: 1px solid #ddd;
+            border: 1px solid #b7c5d9;
             border-radius: 4px;
-            font-size: 14px;
+            background-color: white;
         }
-
-        .form-group textarea {
-            min-height: 100px;
+        
+        textarea {
+            height: 100px;
             resize: vertical;
         }
-
-        .form-group small {
-            color: #666;
-            font-size: 12px;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .submit-btn {
-            background-color: #ff6600;
+        
+        button {
+            background-color: #800080;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
-            flex: 1;
         }
-
-        .submit-btn:hover {
-            background-color: #e55b00;
+        
+        button:hover {
+            background-color: #6a006a;
         }
-
-        .cancel-btn {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 20px;
+        
+        .thread {
+            background-color: #d6daf0;
+            border: 1px solid #b7c5d9;
+            margin-bottom: 20px;
             border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            flex: 1;
-        }
-
-        .cancel-btn:hover {
-            background-color: #5a6268;
-        }
-
-        /* Publicaciones */
-        .posts {
-            margin-top: 20px;
+            padding: 15px;
         }
         
         .post {
-            background-color: #f0e0d6;
-            padding: 15px;
-            margin-bottom: 15px;
+            background-color: white;
+            border: 1px solid #b7c5d9;
+            margin-bottom: 10px;
+            padding: 10px;
             border-radius: 4px;
-            border: 1px solid #d9bfb7;
         }
         
         .post-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 14px;
             color: #117743;
-        }
-        
-        .post-user {
             font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
         }
         
         .post-content {
             margin-bottom: 10px;
-            word-wrap: break-word;
-            white-space: pre-wrap;
         }
         
         .post-image {
-            max-width: 100%;
-            max-height: 400px;
-            margin: 10px 0;
-            border-radius: 4px;
-            border: 1px solid #d9bfb7;
+            max-width: 200px;
+            max-height: 200px;
+            margin: 5px 0;
         }
         
-        .post-footer {
-            font-size: 12px;
-            color: #707070;
-            display: flex;
-            justify-content: space-between;
+        .replies {
+            margin-left: 20px;
+            margin-top: 10px;
         }
         
-        .message {
+        .reply-form {
+            margin-top: 10px;
             padding: 10px;
-            margin: 10px 0;
+            background-color: #eef2ff;
             border-radius: 4px;
-            text-align: center;
         }
         
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .hidden {
+            display: none;
         }
         
         .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            color: red;
+            background-color: #ffd6d6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .success {
+            color: green;
+            background-color: #d6ffd6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
         }
         
         .loading {
             text-align: center;
             padding: 20px;
-            color: #666;
-        }
-
-        .anonymous {
-            color: #888;
-            font-style: italic;
-        }
-
-        .refresh-btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        .refresh-btn:hover {
-            background-color: #45a049;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Red Social Anónima</h1>
-            <div class="header-actions">
-                <a href="admin.html" class="admin-link">Panel Admin</a>
-            </div>
-        </header>
-
-        <!-- Menú desplegable para publicar -->
-        <div class="menu-container">
-            <button class="menu-button" onclick="toggleMenu()">➕ Crear Publicación</button>
-            <div class="dropdown-content" id="postMenu">
-                <div class="post-form">
-                    <h3>Nueva Publicación</h3>
-                    <form id="postForm">
-                        <div class="form-group">
-                            <label for="postName">Nombre (opcional):</label>
-                            <input type="text" id="postName" placeholder="Anónimo">
-                            <small>Si lo dejas vacío, se publicará como "Anónimo"</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="postContent">Contenido:</label>
-                            <textarea id="postContent" placeholder="¿Qué quieres compartir?" required></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="postImage">Imagen (opcional):</label>
-                            <input type="file" id="postImage" accept="image/*">
-                            <small>Máximo 5MB</small>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="submit-btn">Publicar</button>
-                            <button type="button" class="cancel-btn" onclick="closeMenu()">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <p>token: ghp_KKmFfhezNvJaIvrCHBV9ufOWBWaQ1i0HFcW</p><p>v</p>
+    <p>gits: 249dd1417f372f7a170eaf6f8e058cf2</p>
+    <header>
+        <div class="header-content">
+            <h1>ChanBoard - Publicaciones anónimas</h1>
         </div>
-
-        <button class="refresh-btn" onclick="refreshPosts()">🔄 Actualizar</button>
+    </header>
+    
+    <div class="container">
+        <div id="message"></div>
         
-        <div id="message" class="message" style="display: none;"></div>
+        <div class="post-form">
+            <h3>Nuevo Hilo</h3>
+            <div class="form-group">
+                <input type="text" id="postTitle" placeholder="Título (opcional)" maxlength="100">
+            </div>
+            <div class="form-group">
+                <textarea id="postContent" placeholder="Contenido del mensaje" required maxlength="2000"></textarea>
+            </div>
+            <div class="form-group">
+                <input type="file" id="postImage" accept="image/*">
+            </div>
+            <button onclick="createPost()">Publicar</button>
+        </div>
         
-        <div class="posts" id="postsContainer">
-            <div class="loading">Cargando publicaciones...</div>
+        <div id="threads"></div>
+        
+        <div id="githubConfig" class="post-form" style="display: none;">
+            <h3>Configuración GitHub</h3>
+            <div class="form-group">
+                <input type="text" id="githubToken" placeholder="Token de GitHub" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="gistId" placeholder="ID del Gist (dejar vacío para crear uno nuevo)">
+            </div>
+            <button onclick="saveConfig()">Guardar Configuración</button>
         </div>
     </div>
 
     <script>
-        // Configuración
-        const GITHUB_TOKEN = "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";
-        const POSTS_GIST_ID = "249dd1417f372f7a170eaf6f8e058cf2";
-        
-        // Elementos del DOM
-        const postForm = document.getElementById('postForm');
-        const postMenu = document.getElementById('postMenu');
-        const messageDiv = document.getElementById('message');
-        const postsContainer = document.getElementById('postsContainer');
+        class ChanBoard {
+    constructor() {
+        this.githubToken = localStorage.getItem('githubToken');
+        this.gistId = localStorage.getItem('gistId');
+        this.posts = [];
+        this.init();
+    }
 
-        // Variable para controlar si el menú debe permanecer abierto
-        let keepMenuOpen = false;
+    async init() {
+        if (!this.githubToken || !this.gistId) {
+            this.showConfigForm();
+        } else {
+            await this.loadPosts();
+            this.renderPosts();
+        }
+    }
 
-        // Alternar menú desplegable
-        function toggleMenu() {
-            postMenu.classList.toggle('show');
-            keepMenuOpen = postMenu.classList.contains('show');
+    showConfigForm() {
+        document.getElementById('githubConfig').style.display = 'block';
+    }
+
+    async saveConfig() {
+        const token = document.getElementById('githubToken').value;
+        const gistId = document.getElementById('gistId').value;
+
+        if (!token) {
+            this.showMessage('Por favor ingresa un token de GitHub', 'error');
+            return;
         }
 
-        // Cerrar menú
-        function closeMenu() {
-            postMenu.classList.remove('show');
-            keepMenuOpen = false;
-            postForm.reset();
+        this.githubToken = token;
+        this.gistId = gistId;
+
+        localStorage.setItem('githubToken', token);
+        localStorage.setItem('gistId', gistId);
+
+        if (!gistId) {
+            await this.createGist();
+        } else {
+            await this.loadPosts();
         }
 
-        // Cerrar menú solo si se hace click fuera y no es el botón del menú
-        document.addEventListener('click', function(event) {
-            const menuContainer = document.querySelector('.menu-container');
-            const menuButton = document.querySelector('.menu-button');
-            const dropdownContent = document.getElementById('postMenu');
-            
-            // Si el click fue fuera del menú y no en el botón del menú, y no debemos mantenerlo abierto
-            if (!menuContainer.contains(event.target) && !keepMenuOpen) {
-                dropdownContent.classList.remove('show');
-            }
-            
-            // Si se hace click en el botón del menú, alternar
-            if (event.target === menuButton) {
-                keepMenuOpen = dropdownContent.classList.contains('show');
-            }
-        });
+        document.getElementById('githubConfig').style.display = 'none';
+        this.showMessage('Configuración guardada correctamente', 'success');
+    }
 
-        // Cargar publicaciones desde el gist
-        async function loadPosts() {
-            try {
-                const response = await fetch(`https://api.github.com/gists/${POSTS_GIST_ID}`, {
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        await createEmptyPostsGist();
-                        return [];
-                    }
-                    throw new Error(`Error: ${response.status}`);
-                }
-                
-                const gist = await response.json();
-                const postsFile = gist.files['posts.json'];
-                
-                if (postsFile && postsFile.content) {
-                    const posts = JSON.parse(postsFile.content);
-                    return Array.isArray(posts) ? posts : [];
-                }
-                
-                return [];
-            } catch (error) {
-                console.error('Error cargando publicaciones:', error);
-                showMessage('Error al cargar las publicaciones', 'error');
-                return [];
-            }
-        }
-
-        // Crear gist vacío si no existe
-        async function createEmptyPostsGist() {
-            try {
-                const gistData = {
-                    description: "Publicaciones de la red social",
+    async createGist() {
+        try {
+            const response = await fetch('https://api.github.com/gists', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${this.githubToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    description: 'ChanBoard - Publicaciones anónimas',
                     public: false,
                     files: {
-                        "posts.json": {
-                            content: JSON.stringify([], null, 2)
+                        'posts.json': {
+                            content: JSON.stringify([])
                         }
                     }
-                };
-                
-                await fetch('https://api.github.com/gists', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify(gistData)
-                });
-            } catch (error) {
-                console.error('Error creando gist:', error);
-            }
-        }
-
-        // Guardar publicaciones en el gist
-        async function savePosts(posts) {
-            try {
-                const updateData = {
-                    description: `Publicaciones de la red social - ${posts.length} posts`,
-                    files: {
-                        "posts.json": {
-                            content: JSON.stringify(posts, null, 2)
-                        }
-                    }
-                };
-                
-                const response = await fetch(`https://api.github.com/gists/${POSTS_GIST_ID}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify(updateData)
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Error: ${response.status}`);
-                }
-                
-                return true;
-            } catch (error) {
-                console.error('Error guardando publicaciones:', error);
-                showMessage('Error al guardar la publicación', 'error');
-                return false;
-            }
-        }
-
-        // Convertir imagen a base64
-        function imageToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(file);
+                })
             });
+
+            if (!response.ok) throw new Error('Error creando Gist');
+
+            const data = await response.json();
+            this.gistId = data.id;
+            localStorage.setItem('gistId', data.id);
+            
+        } catch (error) {
+            this.showMessage('Error al crear el Gist: ' + error.message, 'error');
         }
+    }
 
-        // Enviar publicación
-        postForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('postName').value.trim();
-            const content = document.getElementById('postContent').value.trim();
-            const imageFile = document.getElementById('postImage').files[0];
-            
-            if (!content) {
-                showMessage('Por favor escribe algo en el contenido', 'error');
-                return;
-            }
-            
-            if (imageFile && imageFile.size > 5 * 1024 * 1024) {
-                showMessage('La imagen es demasiado grande (máximo 5MB)', 'error');
-                return;
-            }
-            
-            let imageBase64 = null;
-            
-            if (imageFile) {
-                try {
-                    imageBase64 = await imageToBase64(imageFile);
-                } catch (error) {
-                    console.error('Error procesando imagen:', error);
-                    showMessage('Error al procesar la imagen', 'error');
-                    return;
-                }
-            }
-            
-            const newPost = {
-                id: Date.now(),
-                username: name || 'Anónimo',
-                content: content,
-                image: imageBase64,
-                timestamp: new Date().toISOString()
-            };
-            
-            try {
-                const posts = await loadPosts();
-                posts.unshift(newPost);
-                
-                // Limitar a 500 publicaciones máximo
-                if (posts.length > 500) {
-                    posts.splice(500);
-                }
-                
-                const saved = await savePosts(posts);
-                
-                if (saved) {
-                    // Limpiar formulario pero mantener el menú abierto
-                    postForm.reset();
-                    showMessage('Publicación creada exitosamente', 'success');
-                    await displayPosts();
-                    // El menú se mantiene abierto para publicar otra cosa
-                }
-            } catch (error) {
-                console.error('Error creando publicación:', error);
-                showMessage('Error al crear la publicación', 'error');
-            }
-        });
+    async loadPosts() {
+        try {
+            if (!this.gistId) return;
 
-        // Mostrar publicaciones
-        async function displayPosts() {
-            try {
-                postsContainer.innerHTML = '<div class="loading">Cargando publicaciones...</div>';
-                
-                const posts = await loadPosts();
-                
-                if (posts.length === 0) {
-                    postsContainer.innerHTML = '<div class="post">No hay publicaciones todavía. ¡Sé el primero en publicar!</div>';
-                    return;
+            const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
+                headers: {
+                    'Authorization': `token ${this.githubToken}`,
                 }
-                
-                postsContainer.innerHTML = '';
-                
-                posts.forEach(post => {
-                    const postElement = document.createElement('div');
-                    postElement.className = 'post';
-                    
-                    const postDate = new Date(post.timestamp);
-                    const formattedDate = `${postDate.toLocaleDateString()} ${postDate.toLocaleTimeString()}`;
-                    
-                    let imageHTML = '';
-                    if (post.image) {
-                        imageHTML = `<img src="${post.image}" alt="Imagen de publicación" class="post-image">`;
+            });
+
+            if (!response.ok) throw new Error('Error cargando posts');
+
+            const gist = await response.json();
+            const content = gist.files['posts.json'].content;
+            this.posts = JSON.parse(content) || [];
+            
+        } catch (error) {
+            this.showMessage('Error cargando posts: ' + error.message, 'error');
+        }
+    }
+
+    async savePosts() {
+        try {
+            const response = await fetch(`https://api.github.com/gists/${this.gistId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${this.githubToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    files: {
+                        'posts.json': {
+                            content: JSON.stringify(this.posts, null, 2)
+                        }
                     }
-                    
-                    const usernameClass = post.username === 'Anónimo' ? 'anonymous' : '';
-                    
-                    postElement.innerHTML = `
-                        <div class="post-header">
-                            <span class="post-user ${usernameClass}">${post.username}</span>
-                            <span class="post-date">${formattedDate}</span>
-                        </div>
-                        <div class="post-content">${post.content}</div>
-                        ${imageHTML}
-                        <div class="post-footer">
-                            <span>ID: ${post.id}</span>
-                        </div>
-                    `;
-                    
-                    postsContainer.appendChild(postElement);
-                });
+                })
+            });
+
+            if (!response.ok) throw new Error('Error guardando posts');
+            
+        } catch (error) {
+            this.showMessage('Error guardando posts: ' + error.message, 'error');
+            throw error;
+        }
+    }
+
+    async createPost() {
+        const title = document.getElementById('postTitle').value;
+        const content = document.getElementById('postContent').value;
+        const imageInput = document.getElementById('postImage');
+        
+        if (!content.trim()) {
+            this.showMessage('El contenido no puede estar vacío', 'error');
+            return;
+        }
+
+        let imageData = null;
+        if (imageInput.files[0]) {
+            imageData = await this.convertImageToBase64(imageInput.files[0]);
+        }
+
+        const post = {
+            id: Date.now().toString(),
+            title: title || 'Sin título',
+            content: content,
+            image: imageData,
+            timestamp: new Date().toISOString(),
+            replies: []
+        };
+
+        this.posts.unshift(post);
+        
+        try {
+            await this.savePosts();
+            this.renderPosts();
+            this.clearForm();
+            this.showMessage('Publicación creada correctamente', 'success');
+        } catch (error) {
+            this.posts.shift(); // Revertir si hay error
+        }
+    }
+
+    async addReply(threadId, content) {
+        const reply = {
+            id: Date.now().toString(),
+            content: content,
+            timestamp: new Date().toISOString()
+        };
+
+        const thread = this.posts.find(p => p.id === threadId);
+        if (thread) {
+            thread.replies.push(reply);
+            
+            try {
+                await this.savePosts();
+                this.renderPosts();
             } catch (error) {
-                console.error('Error mostrando publicaciones:', error);
-                postsContainer.innerHTML = '<div class="post error">Error al cargar las publicaciones</div>';
+                thread.replies.pop(); // Revertir si hay error
             }
         }
+    }
 
-        // Actualizar publicaciones
-        async function refreshPosts() {
-            await displayPosts();
-            showMessage('Publicaciones actualizadas', 'success');
-        }
-
-        // Mostrar mensajes
-        function showMessage(message, type) {
-            messageDiv.textContent = message;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 3000);
-        }
-
-        // Inicializar
-        window.addEventListener('DOMContentLoaded', async function() {
-            await displayPosts();
+    convertImageToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
+    }
 
-        // Hacer funciones globales
-        window.toggleMenu = toggleMenu;
-        window.closeMenu = closeMenu;
-        window.refreshPosts = refreshPosts;
+    renderPosts() {
+        const threadsContainer = document.getElementById('threads');
+        threadsContainer.innerHTML = '';
+
+        if (this.posts.length === 0) {
+            threadsContainer.innerHTML = '<div class="post">No hay publicaciones aún. ¡Sé el primero en postear!</div>';
+            return;
+        }
+
+        this.posts.forEach(post => {
+            const threadElement = this.createThreadElement(post);
+            threadsContainer.appendChild(threadElement);
+        });
+    }
+
+    createThreadElement(post) {
+        const threadDiv = document.createElement('div');
+        threadDiv.className = 'thread';
+        threadDiv.innerHTML = `
+            <div class="post">
+                <div class="post-header">
+                    Anónimo • ${new Date(post.timestamp).toLocaleString()}
+                    <span style="float: right;">#${post.id.slice(-4)}</span>
+                </div>
+                ${post.title ? `<div style="font-weight: bold; margin-bottom: 5px;">${this.escapeHtml(post.title)}</div>` : ''}
+                <div class="post-content">${this.formatContent(post.content)}</div>
+                ${post.image ? `<img src="${post.image}" class="post-image" alt="Imagen adjunta">` : ''}
+            </div>
+            <div class="replies" id="replies-${post.id}">
+                ${post.replies.map(reply => this.createReplyElement(reply)).join('')}
+            </div>
+            <div class="reply-form">
+                <textarea id="reply-${post.id}" placeholder="Responder a este hilo..." maxlength="1000"></textarea>
+                <button onclick="chanBoard.addReply('${post.id}', document.getElementById('reply-${post.id}').value)">Responder</button>
+            </div>
+        `;
+        return threadDiv;
+    }
+
+    createReplyElement(reply) {
+        return `
+            <div class="post">
+                <div class="post-header">
+                    Anónimo • ${new Date(reply.timestamp).toLocaleString()}
+                </div>
+                <div class="post-content">${this.formatContent(reply.content)}</div>
+            </div>
+        `;
+    }
+
+    formatContent(content) {
+        // Convertir URLs en enlaces
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        let formatted = this.escapeHtml(content).replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+        
+        // Convertir saltos de línea en <br>
+        formatted = formatted.replace(/\n/g, '<br>');
+        
+        return formatted;
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    clearForm() {
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postContent').value = '';
+        document.getElementById('postImage').value = '';
+    }
+
+    showMessage(message, type) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        setTimeout(() => {
+            messageDiv.innerHTML = '';
+        }, 5000);
+    }
+}
+
+// Instanciar la aplicación
+const chanBoard = new ChanBoard();
+
+// Funciones globales para los botones
+function saveConfig() {
+    chanBoard.saveConfig();
+}
+
+function createPost() {
+    chanBoard.createPost();
+}
     </script>
 </body>
 </html>
